@@ -29,13 +29,13 @@ from sklearn.utils.extmath import randomized_svd
 from absl import app
 
 def main(_):
-  n_concept = 6
+  n_concept = 5
   n_cluster = 5
   n = 60000
   n0 = int(n * 0.8)
   batch_size = 128
   pretrain = True
-  verbose = False
+  verbose = True
   thres = 0.2
   # create dataset
   #toy_helper_v2.create_dataset(n_sample=60000)
@@ -83,7 +83,7 @@ def main(_):
                                         f_val,
                                         y_val,
                                         n_concept,
-                                        verbose=False,
+                                        verbose=verbose,
                                         metric1=['binary_accuracy'],
                                         loss1=keras.losses.binary_crossentropy,
                                         thres=thres,
@@ -124,7 +124,8 @@ def main(_):
                            epochs=10,
                            metric1=['binary_accuracy'],
                            loss1=keras.losses.binary_crossentropy,
-                           thres=0.0)   
+                           thres=thres,
+                           load='toy_data/latest_topic_toy.h5')   
     
     # visualize the nearest neighbors
     x = np.load('toy_data/x_data_small.npy')

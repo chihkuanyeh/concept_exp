@@ -152,6 +152,8 @@ def get_completeness(predict,
   topic_model_pr = Model(inputs=f_input, outputs=pred)
   topic_model_pr.layers[-1].trainable = True
 
+  if load:
+        topic_model_pr.load_weights(load)
   if opt =='sgd':
     optimizer = SGD(lr=0.001)
     optimizer_state = [optimizer.iterations, optimizer.lr,
@@ -171,13 +173,14 @@ def get_completeness(predict,
       loss=given_loss(loss1=loss1),
       optimizer=optimizer,metrics=metric1)
   print(topic_model_pr.summary())
+
   topic_model_pr.fit(
           f_train,
           y_train,
           batch_size=128,
           epochs=epochs,
           validation_data=(f_val, y_val),
-          verbose=True)
+          verbose=verbose)
   return 0
 
 def topic_model_new_crop(predict,
@@ -486,55 +489,38 @@ def topic_model_new_toy(predict,
                load=False,
                para = 0.5):
   """Returns main function of topic model."""
-  # f_input size (None, 8,8,2048)
-  #input = Input(shape=(299,299,3), name='input')
-  #f_input = get_feature(input)
+
 
   f_input = Input(shape=(f_train.shape[1],f_train.shape[2],f_train.shape[3]), name='f_input')
   f_input_n =  Lambda(lambda x:K.l2_normalize(x,axis=(3)))(f_input)
-  # topic vector size (2048,n_concept)
+
   topic_vector = Weight((f_train.shape[3], n_concept))(f_input)
   topic_vector_n = Lambda(lambda x: K.l2_normalize(x, axis=0))(topic_vector)
-
-  # topic prob = batchsize * 8 * 8 * n_concept
   topic_prob = Lambda(lambda x:K.dot(x[0],x[1]))([f_input, topic_vector_n])
   topic_prob_n = Lambda(lambda x:K.dot(x[0],x[1]))([f_input_n, topic_vector_n])
   topic_prob_mask = Lambda(lambda x:K.cast(K.greater(x,thres),'float32'))(topic_prob_n)
   topic_prob_am = Lambda(lambda x:x[0]*x[1])([topic_prob,topic_prob_mask])
-  #topic_prob_pos = Lambda(lambda x: K.maximum(x,-1000))(topic_prob)
-  #print(K.sum(topic_prob, axis=3, keepdims=True))
   topic_prob_sum = Lambda(lambda x: K.sum(x, axis=3, keepdims=True)+1e-3)(topic_prob_am)
   topic_prob_nn = Lambda(lambda x: x[0]/x[1])([topic_prob_am, topic_prob_sum])
-  # rec size is batchsize * 8 * 8 * 2048
+
   rec_vector_1 = Weight((n_concept, 500))(f_input)
   rec_vector_2 = Weight((500, f_train.shape[3]))(f_input)
-  #rec = Lambda(lambda x:K.dot(x[0],K.transpose(x[1])))([topic_prob_pos, topic_vector])
-  #scale_value = Weight((1,1,1,1))(f_input)
-  #bias_value = Weight((1,1,1,2048))(f_input)
-  #scaled_rec1 = Lambda(lambda x: x[0] * x[1])([rec, scale_value])
-  #scaled_rec2 = Lambda(lambda x: x[0] + x[1])([scaled_rec1, bias_value])
   rec_layer_1 = Lambda(lambda x:K.relu(K.dot(x[0],x[1])))([topic_prob_nn, rec_vector_1])
   rec_layer_2 = Lambda(lambda x:K.dot(x[0],x[1]))([rec_layer_1, rec_vector_2])
-  #rec_layer_n =  Lambda(lambda x:K.l2_normalize(x,axis=(3)))(rec_layer)
   pred = predict(rec_layer_2)
   topic_model_pr = Model(inputs=f_input, outputs=pred)
-  topic_model_pr.layers[-1].trainable = True
-  #topic_model_pr.layers[1].trainable = False
+  topic_model_pr.layers[-1].trainable = False
   if opt =='sgd':
     optimizer = SGD(lr=0.001)
     optimizer_state = [optimizer.iterations, optimizer.lr,
           optimizer.momentum, optimizer.decay]
     optimizer_reset = tf.compat.v1.variables_initializer(optimizer_state)
   elif opt =='adam':
-    # These depend on the optimizer class
     optimizer = Adam(lr=0.001)
     optimizer_state = [optimizer.iterations, optimizer.lr, optimizer.beta_1,
                              optimizer.beta_2, optimizer.decay]
     optimizer_reset = tf.compat.v1.variables_initializer(optimizer_state)
 
-  # Later when you want to reset the optimizer
-  #K.get_session().run(optimizer_reset)
-  #print(metric1)
   metric1.append(mean_sim(topic_prob_n, n_concept))
   topic_model_pr.compile(
       loss=topic_loss_toy(topic_prob_n, topic_vector_n,  n_concept, f_input, loss1=loss1, para = para),
@@ -542,8 +528,6 @@ def topic_model_new_toy(predict,
   print(topic_model_pr.summary())
   if load:
     topic_model_pr.load_weights(load)
-  #topic_model_pr.layers[-3].set_weights([np.zeros((2048,1000))])
-  #topic_model_pr.layers[-3].trainable = False
   return topic_model_pr, optimizer_reset, optimizer, topic_vector_n,  n_concept, f_input
 
 def get_acc(binary_sample, f_val, y_val_logit, shap_model, verbose=False):

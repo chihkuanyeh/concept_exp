@@ -628,9 +628,9 @@ def create_dataset(n_sample=60000):
   y[:, 13] = (1 - (concept[:, 0] * concept[:, 4] + concept[:, 3])) > 0
   y[:, 14] = np.bitwise_xor(concept[:, 4], concept[:, 3])
 
-  np.save('x_data.npy', x)
-  np.save('y_data.npy', y)
-  np.save('concept_data.npy', concept)
+  np.save('toy_data/x_data.npy', x)
+  np.save('toy_data/y_data.npy', y)
+  np.save('toy_data/concept_data.npy', concept)
 
   return width, height
 
