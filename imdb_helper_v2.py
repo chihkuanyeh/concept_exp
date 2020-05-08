@@ -69,6 +69,21 @@ epochs = 1
 
 stop_word_list = ["i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"]
 
+def show_sentence_2(x_train, n_instance, start_index, end_index):
+  INDEX_FROM=3
+  x_temp = x_train[n_instance]
+  word_to_id = keras.datasets.imdb.get_word_index()
+  word_to_id = {k:(v+INDEX_FROM) for k,v in word_to_id.items()}
+  word_to_id["<PAD>"] = 0
+  word_to_id["<START>"] = 1
+  word_to_id["<UNK>"] = 2
+  word_to_id["<UNUSED>"] = 3
+
+  id_to_word = {value:key for key,value in word_to_id.items()}
+  ss = ' '.join(id_to_word[id] for id in x_temp[start_index:end_index] )
+  print(ss)
+  return ss
+
 def show_sentence(x_train, n_instance, n_index, dict_count):
   INDEX_FROM=3
   x_temp = x_train[n_instance]
@@ -80,13 +95,14 @@ def show_sentence(x_train, n_instance, n_index, dict_count):
   word_to_id["<UNUSED>"] = 3
 
   id_to_word = {value:key for key,value in word_to_id.items()}
-  print(' '.join(id_to_word[id] for id in x_temp[n_index*2:n_index*2+9] ))
+  ss = ' '.join(id_to_word[id] for id in x_temp[n_index*2:n_index*2+9] )
+  print(ss)
   for id in x_temp[n_index*2:n_index*2+9]:
     if id_to_word[id] not in dict_count:
       dict_count[id_to_word[id]]=1
     else:
       dict_count[id_to_word[id]]+=1
-  return 0
+  return ss
 
 def load_data(pretrain=False):
   print('Loading data...')

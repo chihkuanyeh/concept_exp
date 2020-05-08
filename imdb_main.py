@@ -120,6 +120,7 @@ def main(_):
   print('top prob')
   print(np.mean(np.max(topic_prob,axis=(0,1))))
   n_size = 196
+  concept_nn_array = np.zeros((n_concept,500,9))
   for i in range(n_concept):
     print('concept:{}'.format(i))
     image_list = []
@@ -133,12 +134,13 @@ def main(_):
         j_int = int(np.floor(j/(n_size)))
         a = int(j-j_int*(n_size))
         temp_sentence = imdb_helper_v2.show_sentence(x_train, j_int, a, dict_count)
+        concept_nn_array[i,jc,:] = x_train[j_int][a*2:a*2+9]
         #f1 = imagedir+filename[j_int]
     for key in dict_count:
       if dict_count[key]>=8 and key not in stop_word_list:
         print(key)
         print(dict_count[key])
-
+  np.save('concept_nn_nlp.npy', concept_nn_array)
        
 if __name__ == '__main__':
   app.run(main)
