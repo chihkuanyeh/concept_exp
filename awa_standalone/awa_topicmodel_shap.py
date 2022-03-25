@@ -40,7 +40,7 @@ if __name__ == '__main__':
   N = f_train.shape[0]
   N_val = f_val.shape[0]
   #print(f_train_crop.shape)
-  thres_array = [0.5]
+  thres_array = [0.0]
 
   #f_train_crop = np.reshape(f_train_crop, (-1,4,8,8,2048))
 
